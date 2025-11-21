@@ -156,24 +156,21 @@ assert all(id_to_token[token_to_id[key]]==key for key in token_to_id) and all(to
 # Your code here:
 # -----------------------------------------------
 def make_vocabulary_map(documents: list) -> tuple:
-    """
-    Build a global vocabulary over all documents.
-    Tokens are:
-      - split on whitespace,
-      - stripped to alphabetic chars only,
-      - lowercased,
-      - kept in order of FIRST occurrence across all documents.
-    """
-    token_to_id = {}
-    # traverse documents in order, and words in order
+    # collect all unique tokens using your tokenize() function
+    all_tokens = set()
     for doc in documents:
-        for w in doc.split():
-            tok = "".join(c for c in w if c.isalpha()).lower()
-            if tok and tok not in token_to_id:
-                token_to_id[tok] = len(token_to_id)
+        for tok in tokenize(doc):
+            all_tokens.add(tok)
 
-    id_to_token = {i: t for t, i in token_to_id.items()}
-    return token_to_id, id_to_token
+    # deterministic vocabulary order (alphabetical)
+    vocab = sorted(all_tokens)
+
+    # token -> int
+    token2int = {tok: i for i, tok in enumerate(vocab)}
+    # int -> token
+    int2token = {i: tok for tok, i in token2int.items()}
+
+    return token2int, int2token
 
 
 # Test
@@ -193,19 +190,18 @@ all(i2t[t2i[tok]] == tok for tok in t2i) # should be True
 # Your code here:
 # -----------------------------------------------
 def tokenize_and_encode(documents: list):
-    # Build vocabulary over all documents
+    # build vocabulary from all documents using make_vocabulary_map
     token_to_id, id_to_token = make_vocabulary_map(documents)
 
-    encoded = []
-    for doc in documents:
-        doc_ids = []
-        for w in doc.split():
-            tok = "".join(c for c in w if c.isalpha()).lower()
-            if tok:  # skip tokens that were only digits/punctuation
-                doc_ids.append(token_to_id[tok])
-        encoded.append(doc_ids)
+    # for each document, use tokenize(doc) to get the token list,
+    # then map each token to its ID
+    encoded = [
+        [token_to_id[token] for token in tokenize(doc)]
+        for doc in documents
+    ]
 
     return encoded, token_to_id, id_to_token
+
 
 
 # Test:
