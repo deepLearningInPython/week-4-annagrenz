@@ -156,18 +156,25 @@ assert all(id_to_token[token_to_id[key]]==key for key in token_to_id) and all(to
 # Your code here:
 # -----------------------------------------------
 def make_vocabulary_map(documents: list) -> tuple:
-    # collect all tokens from all documents
-    all_tokens = {tok for doc in documents for tok in tokenize(doc)}
-    
-    # sort to get a deterministic ordering
-    vocab = sorted(all_tokens)
-    
-    # token -> int
-    token2int = {tok: i for i, tok in enumerate(vocab)}
-    # int -> token
-    int2token = {i: tok for tok, i in token2int.items()}
-    
-    return token2int, int2token
+    """
+    Build a global vocabulary over all documents.
+    Tokens are:
+      - split on whitespace,
+      - stripped to alphabetic chars only,
+      - lowercased,
+      - kept in order of FIRST occurrence across all documents.
+    """
+    token_to_id = {}
+    # traverse documents in order, and words in order
+    for doc in documents:
+        for w in doc.split():
+            tok = "".join(c for c in w if c.isalpha()).lower()
+            if tok and tok not in token_to_id:
+                token_to_id[tok] = len(token_to_id)
+
+    id_to_token = {i: t for t, i in token_to_id.items()}
+    return token_to_id, id_to_token
+
 
 # Test
 t2i, i2t = make_vocabulary_map([text])
@@ -186,27 +193,20 @@ all(i2t[t2i[tok]] == tok for tok in t2i) # should be True
 # Your code here:
 # -----------------------------------------------
 def tokenize_and_encode(documents: list):
-    # build vocabulary mappings from all documents
+    # Build vocabulary over all documents
     token_to_id, id_to_token = make_vocabulary_map(documents)
 
     encoded = []
     for doc in documents:
-        # simple tokenization for Task 8:
-        # - split on whitespace
-        # - remove non-alphabetic chars
-        # - lowercase
-        # - KEEP order and duplicates
-        doc_tokens = [
-            "".join(c for c in w if c.isalpha()).lower()
-            for w in doc.split()
-        ]
-        # drop empty tokens (e.g. tokens that were only digits or punctuation)
-        doc_tokens = [t for t in doc_tokens if t]
-
-        # map tokens to IDs
-        encoded.append([token_to_id[t] for t in doc_tokens])
+        doc_ids = []
+        for w in doc.split():
+            tok = "".join(c for c in w if c.isalpha()).lower()
+            if tok:  # skip tokens that were only digits/punctuation
+                doc_ids.append(token_to_id[tok])
+        encoded.append(doc_ids)
 
     return encoded, token_to_id, id_to_token
+
 
 # Test:
 enc, t2i, i2t = tokenize_and_encode([text, 'What a luck we had today!'])
