@@ -188,18 +188,24 @@ all(i2t[t2i[tok]] == tok for tok in t2i) # should be True
 def tokenize_and_encode(documents: list):
     # build vocabulary mappings from all documents
     token_to_id, id_to_token = make_vocabulary_map(documents)
-    
-    # encode each document as a list of token IDs
+
     encoded = []
     for doc in documents:
-        # tokenize: remove punctuation, lowercase, but KEEP order and duplicates
-        doc_tokens = [''.join(c for c in w if c.isalpha()).lower()
-                      for w in doc.split()]
-        # drop any empty tokens (in case a "word" was only punctuation)
+        # simple tokenization for Task 8:
+        # - split on whitespace
+        # - remove non-alphabetic chars
+        # - lowercase
+        # - KEEP order and duplicates
+        doc_tokens = [
+            "".join(c for c in w if c.isalpha()).lower()
+            for w in doc.split()
+        ]
+        # drop empty tokens (e.g. tokens that were only digits or punctuation)
         doc_tokens = [t for t in doc_tokens if t]
-        
+
+        # map tokens to IDs
         encoded.append([token_to_id[t] for t in doc_tokens])
-    
+
     return encoded, token_to_id, id_to_token
 
 # Test:
